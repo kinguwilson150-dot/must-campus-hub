@@ -86,18 +86,20 @@ if (postCheck.count === 0) {
 
 // API: Admin Login
 // API: Admin Login (Inatumia Username na Password pekee kulingana na fomu yako)
+// API: Admin Login Inayopokea Password au Passcode kwa urahisi
 app.post('/api/admin/login', (req, res) => {
     try {
-        const { username, password } = req.body;
+        const { username, password, passcode } = req.body;
+        const enteredSecret = password || passcode; // Pokea yoyote kati ya hizo mbili inayotumwa na fomu
         
-        // Angalia kwenye database kama username na password zinalingana
-        const stmt = db.prepare(`SELECT * FROM admins WHERE username = ? AND password = ?`);
-        const admin = stmt.get(username, password);
+        // Tafuta kwenye database kama username na password/passcode zinalingana
+        const stmt = db.prepare(`SELECT * FROM admins WHERE username = ? AND (password = ? OR passcode = ?)`);
+        const admin = stmt.get(username, enteredSecret, enteredSecret);
 
         if (admin) {
             res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
         } else {
-            res.status(401).json({ success: false, message: 'Username au Password si sahihi!' });
+            res.status(401).json({ success: false, message: 'Taarifa za Admin au Secret Code si sahihi!' });
         }
     } catch (err) {
         res.status(500).json({ success: false, message: 'Hitilafu ya server.' });
@@ -161,7 +163,7 @@ app.post('/api/auth/login', (req, res) => {
     try {
         const { regNumber, password } = req.body;
         
-        const user = db.prepare(`SELECT * FROM users WHERE regNumber = ? AND password = ?`).get(will, 5821);
+        const user = db.prepare(`SELECT * FROM users WHERE regNumber = ? AND password = ?`).get(regNumber, password);
         if (!user) {
             return res.status(401).json({ success: false, message: 'Namba ya usajili au password si sahihi!' });
         }
