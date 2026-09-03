@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUST Hub - Weka Posti</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin: auto;
+        }
+        .lang-box {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .lang-box label {
+            margin: 0 8px 0 0;
+            font-size: 14px;
+        }
+        .lang-box select {
+            width: auto;
+            padding: 5px;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-top: 0;
+        }
+        label {
+            display: block;
+            margin-top: 12px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Sehemu ya Kuchagua Lugha -->
+    <div class="lang-box">
+        <label for="langSelect">🌐 Lugha / Language:</label>
+        <select id="langSelect">
+            <option value="sw" selected>Kiswahili</option>
+            <option value="en">English</option>
+        </select>
+    </div>
+
+    <h2 id="heading">Weka Tangazo / Lost & Found</h2>
+    
+    <form id="postForm">
+        <label id="lbl-type">Aina ya Posti:</label>
+        <select name="type" id="typeSelect" required>
+            <option value="lost" id="opt-lost">Kupotea (Lost)</option>
+            <option value="found" id="opt-found">Kupatikana (Found)</option>
+            <option value="opportunity" id="opt-opp">Fursa / Tangazo</option>
+        </select>
+
+        <label id="lbl-title">Kichwa cha Habari:</label>
+        <input type="text" name="title" id="inp-title" required placeholder="Mf. Kitambulisho kimepotea">
+
+        <label id="lbl-category">Kategoria:</label>
+        <input type="text" name="category" id="inp-category" placeholder="Mf. Electronics / Nyaraka">
+
+        <label id="lbl-location">Eneo (Location):</label>
+        <input type="text" name="location" id="inp-location" placeholder="Mf. Block T / College Cafeteria">
+
+        <label id="lbl-contact">Namba ya Mawasiliano:</label>
+        <input type="text" name="contact" id="inp-contact" required placeholder="Mf. 0712345678">
+
+        <label id="lbl-description">Maelezo Kamili:</label>
+        <textarea name="description" id="inp-description" rows="4" placeholder="Eleza kwa undani hapa..."></textarea>
+
+        <label id="lbl-image">Weka Picha (Kama ipo):</label>
+        <input type="file" name="image" accept="image/*">
+
+        <button type="submit" id="btn-submit">Weka Posti</button>
+    </form>
+</div>
+
+<script>
+    // Kamusi ya Tafsiri (Swahili & English)
+    const translations = {
+        sw: {
+            heading: "Weka Tangazo / Lost & Found",
+            type: "Aina ya Posti:",
+            optLost: "Kupotea (Lost)",
+            optFound: "Kupatikana (Found)",
+            optOpp: "Fursa / Tangazo",
+            title: "Kichwa cha Habari:",
+            phTitle: "Mf. Kitambulisho kimepotea",
+            category: "Kategoria:",
+            phCategory: "Mf. Electronics / Nyaraka",
+            location: "Eneo (Location):",
+            phLocation: "Mf. Block T / College Cafeteria",
+            contact: "Namba ya Mawasiliano:",
+            phContact: "Mf. 0712345678",
+            description: "Maelezo Kamili:",
+            phDescription: "Eleza kwa undani hapa...",
+            image: "Weka Picha (Kama ipo):",
+            submit: "Weka Posti",
+            submitting: "Inatumwa...",
+            successMsg: "Posti yako imewekwa hewani kwa mafanikio!",
+            errorMsg: "Kosa limetokea!",
+            serverError: "Imeshindwa kuunganisha na server!"
+        },
+        en: {
+            heading: "Create Announcement / Lost & Found",
+            type: "Post Type:",
+            optLost: "Lost Item",
+            optFound: "Found Item",
+            optOpp: "Opportunity / Announcement",
+            title: "Title:",
+            phTitle: "e.g. Lost Student ID Card",
+            category: "Category:",
+            phCategory: "e.g. Electronics / Documents",
+            location: "Location:",
+            phLocation: "e.g. Block T / College Cafeteria",
+            contact: "Contact Number:",
+            phContact: "e.g. 0712345678",
+            description: "Full Description:",
+            phDescription: "Describe in detail here...",
+            image: "Upload Image (Optional):",
+            submit: "Submit Post",
+            submitting: "Submitting...",
+            successMsg: "Your post has been published successfully!",
+            errorMsg: "An error occurred!",
+            serverError: "Failed to connect to the server!"
+        }
+    };
+
+    let currentLang = 'sw';
+
+    // Function ya Kubadilisha Lugha
+    document.getElementById('langSelect').addEventListener('change', (e) => {
+        currentLang = e.target.value;
+        const t = translations[currentLang];
+
+        document.getElementById('heading').innerText = t.heading;
+        document.getElementById('lbl-type').innerText = t.type;
+        document.getElementById('opt-lost').innerText = t.optLost;
+        document.getElementById('opt-found').innerText = t.optFound;
+        document.getElementById('opt-opp').innerText = t.optOpp;
+        
+        document.getElementById('lbl-title').innerText = t.title;
+        document.getElementById('inp-title').placeholder = t.phTitle;
+        
+        document.getElementById('lbl-category').innerText = t.category;
+        document.getElementById('inp-category').placeholder = t.phCategory;
+
+        document.getElementById('lbl-location').innerText = t.location;
+        document.getElementById('inp-location').placeholder = t.phLocation;
+
+        document.getElementById('lbl-contact').innerText = t.contact;
+        document.getElementById('inp-contact').placeholder = t.phContact;
+
+        document.getElementById('lbl-description').innerText = t.description;
+        document.getElementById('inp-description').placeholder = t.phDescription;
+
+        document.getElementById('lbl-image').innerText = t.image;
+        document.getElementById('btn-submit').innerText = t.submit;
+    });
+
+    // Handler ya Kutuma Fomu kwenda kwenye Server
+    const form = document.getElementById('postForm');
+    const submitBtn = document.getElementById('btn-submit');
+
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(form);
+        const t = translations[currentLang];
+        
+        // Disable button na uonyeshe inapakia
+        submitBtn.disabled = true;
+        submitBtn.innerText = t.submitting;
+
+        try {
+            const response = await fetch('http://localhost:5001/api/posts', {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+            if (result.success) {
+                alert(t.successMsg);
+                form.reset();
+            } else {
+                alert(t.errorMsg + ' ' + (result.message || ''));
+            }
+        } catch (error) {
+            console.error('Hitilafu:', error);
+            alert(t.serverError);
+        } finally {
+            // Rudisha button katika hali yake ya kawaida
+            submitBtn.disabled = false;
+            submitBtn.innerText = t.submit;
+        }
+    });
+</script>
+
+</body>
+</html>

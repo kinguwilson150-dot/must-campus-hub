@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="sw" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUST Campus Hub - Opportunity & Lost/Found Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            DEFAULT: '#EA580C',
+                            light: '#F97316',
+                            dark: '#C2410C',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="min-h-screen flex flex-col font-sans bg-[#F8FAFC] text-slate-800 dark:bg-slate-950 dark:text-slate-200 transition-colors duration-300">
+
+    <div id="languageModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-2xl w-full max-w-sm text-center space-y-6 shadow-2xl">
+            <div class="w-16 h-16 bg-orange-500/10 text-orange-600 rounded-full flex items-center justify-center mx-auto text-2xl">
+                <i class="fa-solid fa-language"></i>
+            </div>
+            <div class="space-y-2">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white">Chagua Lugha / Choose Language</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400">Tafadhali chagua lugha unayotaka kutumia kwenye mfumo.</p>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <button onclick="setLanguage('sw')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold p-3 rounded-xl transition text-sm">Kiswahili</button>
+                <button onclick="setLanguage('no')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-orange-600 font-semibold p-3 rounded-xl transition text-sm">English</button>
+            </div>
+        </div>
+    </div>
+
+    <header class="bg-[#FDFEFE] dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800 p-4 sticky top-0 z-40 shadow-sm transition-colors duration-300">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="bg-orange-600 text-white font-black p-2.5 rounded-xl shadow">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-slate-900 dark:text-white" data-translate="siteTitle">MUST Campus Hub</h1>
+                    <p class="text-xs text-orange-600 dark:text-orange-500 font-medium">Mbeya University of Science & Technology</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <button onclick="toggleTheme()" class="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 p-2.5 rounded-lg transition text-xs flex items-center justify-center border border-slate-200 dark:border-slate-700" title="Badili Mwanga">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+
+                <button onclick="openModal('languageModal')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-orange-600 text-xs px-3 py-2 rounded-lg transition flex items-center space-x-1.5 border border-slate-200 dark:border-slate-700">
+                    <i class="fa-solid fa-globe"></i>
+                    <span id="currentLangLabel">Swahili</span>
+                </button>
+                
+                <div id="authButtons">
+                    <button onclick="openModal('loginModal')" class="bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-sm px-4 py-2 rounded-lg transition border border-slate-200 dark:border-slate-700" data-translate="loginBtn">Ingia</button>
+                    <button onclick="openModal('registerModal')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold text-sm px-4 py-2 rounded-lg transition ml-2 shadow" data-translate="registerBtn">Jisajili</button>
+                </div>
+
+                <div id="userProfileArea" class="hidden flex items-center space-x-3">
+                    <span id="userNameDisplay" class="text-sm font-medium text-slate-700 dark:text-slate-300"></span>
+                    <button onclick="logoutUser()" class="bg-red-50 text-red-600 hover:bg-red-500 hover:text-white text-xs px-3 py-2 rounded-lg transition border border-red-200" data-translate="logoutBtn">Toka</button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6 flex-grow space-y-8 w-full">
+        
+        <div class="bg-gradient-to-r from-orange-500/10 via-amber-500/5 to-transparent border border-orange-500/20 p-8 rounded-2xl shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
+            <div class="space-y-3">
+                <span class="bg-orange-500/10 text-orange-600 dark:text-orange-400 text-xs px-3 py-1 rounded-full font-semibold border border-orange-500/20" data-translate="badgeText">Campus Community Portal</span>
+                <h2 class="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white" data-translate="heroTitle">Tafuta Vitu, Tangaza Fursa & Tenda za Chuo</h2>
+                <p class="text-slate-600 dark:text-slate-400 text-sm max-w-xl" data-translate="heroDesc">Jukwaa rasmi la wanafunzi na wafanyakazi kuripoti vilivyopotea, vilivyookotwa, na kutangaza fursa mbalimbali za kibiashara au ajira.</p>
+            </div>
+            <button onclick="checkAuthAndPost()" class="bg-orange-600 hover:bg-orange-700 text-white font-bold px-6 py-3 rounded-xl transition shadow-md shrink-0" data-translate="ctaBtn">
+                + Chapisha Tenda au Fursa
+            </button>
+        </div>
+
+        <div class="bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 flex items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center space-x-3">
+                <div class="bg-orange-600 text-white p-3 rounded-xl text-lg shrink-0">
+                    <i class="fa-solid fa-bullhorn"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-slate-900 dark:text-white" data-translate="announcementTitle">Matangazo Muhimu ya Utawala (University Announcements)</h4>
+                    <p class="text-xs text-slate-500 dark:text-slate-400" data-translate="announcementDesc">Angalia taarifa mpya kutoka uongozi wa chuo na ratiba za mihula.</p>
+                </div>
+            </div>
+            <button onclick="filterPosts('announcement')" class="bg-orange-600 hover:bg-orange-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition shrink-0 shadow" data-translate="viewAllBtn">
+                Angalia Zote
+            </button>
+        </div>
+
+        <div class="space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-white" data-translate="feedTitle">Matangazo na Posti za Hivi Punde</h3>
+                <div class="flex flex-wrap gap-2 text-xs">
+                    <button onclick="filterPosts('all')" class="filter-btn active bg-orange-600 text-white font-bold px-3 py-1.5 rounded-lg transition shadow" data-translate="filterAll">Zote</button>
+                    <button onclick="filterPosts('opportunity')" class="filter-btn bg-[#FDFEFE] dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 transition" data-translate="filterOpportunity">Tenda / Fursa</button>
+                    <button onclick="filterPosts('lost')" class="filter-btn bg-[#FDFEFE] dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 transition" data-translate="filterLost">Zilizopotea</button>
+                    <button onclick="filterPosts('found')" class="filter-btn bg-[#FDFEFE] dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 transition" data-translate="filterFound">Zilizookotwa</button>
+                </div>
+            </div>
+            <div id="postsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+        </div>
+    </main>
+
+    <div id="detailsModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-xl space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto relative">
+            <div class="flex justify-between items-center border-b border-slate-200 dark:border-slate-800 pb-3">
+                <span id="detailBadge" class="px-2.5 py-1 rounded-full text-xs font-semibold"></span>
+                <button onclick="closeModal('detailsModal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="detailImageContainer" class="hidden">
+                <img id="detailImage" src="" class="w-full h-56 object-cover rounded-xl border border-slate-200 dark:border-slate-800">
+            </div>
+
+            <div class="space-y-3">
+                <h3 id="detailTitle" class="text-xl font-bold text-slate-900 dark:text-white"></h3>
+                
+                <div class="grid grid-cols-2 gap-2 text-xs text-slate-600 dark:text-slate-400 bg-slate-100/70 dark:bg-slate-800/50 p-3 rounded-xl border border-slate-200 dark:border-slate-800">
+                    <div><strong class="text-slate-900 dark:text-white">Eneo:</strong> <span id="detailLocation"></span></div>
+                    <div><strong class="text-slate-900 dark:text-white">Kategoria:</strong> <span id="detailCategory"></span></div>
+                    <div><strong class="text-slate-900 dark:text-white">Mchapishaji:</strong> <span id="detailAuthor"></span></div>
+                    <div><strong class="text-slate-900 dark:text-white">Tarehe:</strong> <span id="detailDate"></span></div>
+                </div>
+
+                <div>
+                    <h4 class="text-xs font-bold text-orange-600 dark:text-orange-500 uppercase tracking-wider mb-1">Maelezo Kamili</h4>
+                    <p id="detailDescription" class="text-sm text-slate-600 dark:text-slate-400 whitespace-pre-line leading-relaxed bg-slate-100/50 dark:bg-slate-800/30 p-3 rounded-xl border border-slate-200 dark:border-slate-800"></p>
+                </div>
+            </div>
+
+            <div class="pt-3 border-t border-slate-200 dark:border-slate-800 flex justify-end">
+                <a id="detailWhatsappBtn" href="#" target="_blank" class="w-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-600 hover:text-white py-3 rounded-xl transition flex items-center justify-center space-x-2 font-bold border border-emerald-200 dark:border-emerald-800 text-sm">
+                    <i class="fa-brands fa-whatsapp text-lg"></i>
+                    <span id="whatsappBtnText">Wasiliana kupitia WhatsApp</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div id="loginModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Ingia kwenye Akaunti Yako</h3>
+                <button onclick="closeModal('loginModal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="userLoginForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Namba ya Usajili / Staff ID</label>
+                    <input type="text" id="loginRegNumber" required class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Nenosiri (Password)</label>
+                    <input type="password" id="loginPassword" required class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                </div>
+                <p id="loginError" class="text-red-500 text-xs hidden"></p>
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold p-3 rounded-lg transition text-sm shadow">Ingia Sasa</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="registerModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-md space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Jisajili kama Mwanafunzi/Staff</h3>
+                <button onclick="closeModal('registerModal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="userRegisterForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Jina Kamili</label>
+                    <input type="text" id="regFullName" required placeholder="Mf. Juma Ally" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Namba ya Usajili / Staff ID</label>
+                    <input type="text" id="regNumber" required placeholder="Mf. T/MUST/..." class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Wadhifa (Role)</label>
+                    <select id="regRole" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                        <option value="student">Mwanafunzi (Student)</option>
+                        <option value="staff">Mfanyakazi (Staff)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Nenosiri</label>
+                    <input type="password" id="regPassword" required class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                </div>
+                <p id="regError" class="text-red-500 text-xs hidden"></p>
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold p-3 rounded-lg transition text-sm shadow">Jisajili Sasa</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="postModal" class="fixed inset-0 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 rounded-2xl w-full max-w-lg space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white">Chapisha Posti, Tenda au Fursa</h3>
+                <button onclick="closeModal('postModal')" class="text-slate-400 hover:text-slate-700 dark:hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="createPostForm" class="space-y-3">
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Aina ya Tangazo</label>
+                    <select id="postType" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                        <option value="opportunity">Fursa / Tenda (Opportunity & Tender)</option>
+                        <option value="lost">Kitu Kilichopotea (Lost Item)</option>
+                        <option value="found">Kitu Kilichookotwa (Found Item)</option>
+                        <option value="announcement">Tangazo la Utawala (Announcement)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Kichwa cha Habari (Title)</label>
+                    <input type="text" id="postTitle" required placeholder="Mf. Tender ya Usafishaji" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Kategoria</label>
+                        <input type="text" id="postCategory" required placeholder="Mf. Business" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Eneo / Mahali</label>
+                        <input type="text" id="postLocation" required placeholder="Mf. Block T" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Namba ya Simu</label>
+                        <input type="text" id="postContact" required placeholder="Mf. 0712345678" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Muda wa Tangazo Kukaa</label>
+                        <select id="postDuration" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none">
+                            <option value="1">Siku 1 (24 Hours)</option>
+                            <option value="3">Siku 3</option>
+                            <option value="7" selected>Siku 7 (Wiki 1)</option>
+                            <option value="14">Siku 14 (Wiki 2)</option>
+                            <option value="30">Siku 30 (Mwezi 1)</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Maelezo Kamili</label>
+                    <textarea id="postDesc" rows="3" required placeholder="Andika maelezo hapa..." class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-3 text-sm text-slate-900 dark:text-white focus:border-orange-500 outline-none"></textarea>
+                </div>
+                <div>
+                    <label class="block text-xs text-slate-500 dark:text-slate-400 mb-1">Ambatisha Picha (Hiari)</label>
+                    <input type="file" id="postImage" accept="image/*" class="w-full bg-slate-100/60 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2 text-xs text-slate-500 dark:text-slate-400">
+                </div>
+                <button type="submit" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold p-3 rounded-lg transition text-sm shadow">Chapisha Sasa</button>
+            </form>
+        </div>
+    </div>
+
+    <footer class="bg-[#FDFEFE] dark:bg-slate-900 border-t border-slate-200/80 dark:border-slate-800 text-center py-6 text-slate-500 dark:text-slate-400 text-xs mt-10 space-y-2 transition-colors duration-300">
+        <p>&copy; 2026 MUST Campus Hub. Haki zote zimehifadhiwa.</p>
+        <div>
+            <a href="admin-login.html" class="text-orange-600 hover:underline transition">Admin Portal</a>
+        </div>
+    </footer>
+
+    <script>
+        const API_URL = 'http://localhost:5001/api/posts';
+        let allPostsData = [];
+
+        const translations = {
+            sw: {
+                siteTitle: "MUST Campus Hub",
+                loginBtn: "Ingia",
+                registerBtn: "Jisajili",
+                logoutBtn: "Toka",
+                badgeText: "Campus Community Portal",
+                heroTitle: "Tafuta Vitu, Tangaza Fursa & Tenda za Chuo",
+                heroDesc: "Jukwaa rasmi la wanafunzi na wafanyakazi kuripoti vilivyopotea, vilivyookotwa, na kutangaza fursa mbalimbali za kibiashara au ajira.",
+                ctaBtn: "+ Chapisha Tenda au Fursa",
+                feedTitle: "Matangazo na Posti za Hivi Punde",
+                announcementTitle: "Matangazo Muhimu ya Utawala (University Announcements)",
+                announcementDesc: "Angalia taarifa mpya kutoka uongozi wa chuo na ratiba za mihula.",
+                viewAllBtn: "Angalia Zote",
+                filterAll: "Zote",
+                filterOpportunity: "Tenda / Fursa",
+                filterLost: "Zilizopotea",
+                filterFound: "Zilizookotwa",
+                readMoreBtn: "Soma Zaidi & Details",
+                whatsappChatBtn: "Wasiliana kupitia WhatsApp"
+            },
+            no: {
+                siteTitle: "MUST Campus Hub",
+                loginBtn: "Login",
+                registerBtn: "Register",
+                logoutBtn: "Logout",
+                badgeText: "Campus Community Portal",
+                heroTitle: "Find Items, Advertise Opportunities & Campus Tenders",
+                heroDesc: "The official platform for students and staff to report lost and found items, and advertise various business or employment opportunities.",
+                ctaBtn: "+ Publish Opportunity or Tender",
+                feedTitle: "Recent Announcements and Posts",
+                announcementTitle: "University Administrative Announcements",
+                announcementDesc: "Check out the latest updates from university leadership and semester schedules.",
+                viewAllBtn: "View All",
+                filterAll: "All",
+                filterOpportunity: "Opportunities / Tenders",
+                filterLost: "Lost Items",
+                filterFound: "Found Items",
+                readMoreBtn: "Read More & Details",
+                whatsappChatBtn: "Contact via WhatsApp"
+            }
+        };
+
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        // --- DARK / LIGHT MODE LOGIC ---
+        function toggleTheme() {
+            const htmlEl = document.documentElement;
+            const themeIcon = document.getElementById('themeIcon');
+            if (htmlEl.classList.contains('dark')) {
+                htmlEl.classList.remove('dark');
+                htmlEl.classList.add('light');
+                localStorage.setItem('theme', 'light');
+                themeIcon.className = "fa-solid fa-moon";
+            } else {
+                htmlEl.classList.remove('light');
+                htmlEl.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                themeIcon.className = "fa-solid fa-sun";
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('themeIcon');
+            
+            if (savedTheme === 'dark') {
+                document.documentElement.classList.remove('light');
+                document.documentElement.classList.add('dark');
+                if(themeIcon) themeIcon.className = "fa-solid fa-sun";
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.documentElement.classList.add('light');
+                if(themeIcon) themeIcon.className = "fa-solid fa-moon";
+            }
+
+            const savedLang = localStorage.getItem('appLang');
+            if (!savedLang) {
+                openModal('languageModal');
+            } else {
+                setLanguage(savedLang, false);
+            }
+        });
+
+        function setLanguage(lang, closeFlag = true) {
+            localStorage.setItem('appLang', lang);
+            document.getElementById('currentLangLabel').innerText = lang === 'sw' ? 'Swahili' : 'English';
+            
+            const elements = document.querySelectorAll('[data-translate]');
+            elements.forEach(el => {
+                const key = el.getAttribute('data-translate');
+                if (translations[lang] && translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+
+            if (closeFlag) {
+                closeModal('languageModal');
+            }
+        }
+
+        function checkAuthAndPost() {
+            const currentUser = localStorage.getItem('currentUser');
+            if(!currentUser) {
+                alert('Tafadhali jisajili au ingia kwanza ili uweze kuchapisha tenda au fursa!');
+                openModal('loginModal');
+            } else {
+                openModal('postModal');
+            }
+        }
+
+        function filterPosts(type) {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('bg-orange-600', 'text-white', 'font-bold', 'shadow');
+                btn.classList.add('bg-[#FDFEFE]', 'dark:bg-slate-900', 'hover:bg-slate-100', 'dark:hover:bg-slate-800', 'text-slate-600', 'dark:text-slate-400', 'border', 'border-slate-200', 'dark:border-slate-800');
+            });
+            event.target.classList.remove('bg-[#FDFEFE]', 'dark:bg-slate-900', 'hover:bg-slate-100', 'dark:hover:bg-slate-800', 'text-slate-600', 'dark:text-slate-400', 'border', 'border-slate-200', 'dark:border-slate-800');
+            event.target.classList.add('bg-orange-600', 'text-white', 'font-bold', 'shadow');
+
+            if(type === 'all') {
+                displayPosts(allPostsData);
+            } else {
+                const filtered = allPostsData.filter(p => p.type === type);
+                displayPosts(filtered);
+            }
+        }
+
+        async function fetchPosts() {
+            try {
+                const res = await fetch(API_URL);
+                const data = await res.json();
+                if(data.success) {
+                    const now = new Date().getTime();
+                    allPostsData = data.data.filter(post => {
+                        if (post.isSolved) return false;
+                        if (post.expireAt && now > post.expireAt) return false;
+                        return true;
+                    });
+                    displayPosts(allPostsData);
+                }
+            } catch (error) {
+                console.error("Hitilafu:", error);
+            }
+        }
+
+        function displayPosts(posts) {
+            const container = document.getElementById('postsContainer');
+            container.innerHTML = '';
+            const currentLang = localStorage.getItem('appLang') || 'sw';
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            if(posts && posts.length > 0) {
+                posts.forEach(post => {
+                    let badgeClass = 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20';
+                    let badgeText = currentLang === 'sw' ? 'Tangazo' : 'Announcement';
+                    if(post.type === 'lost') { badgeClass = 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20'; badgeText = currentLang === 'sw' ? 'Imepotea' : 'Lost'; }
+                    else if(post.type === 'found') { badgeClass = 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'; badgeText = currentLang === 'sw' ? 'Imeookotwa' : 'Found'; }
+                    else if(post.type === 'opportunity') { badgeClass = 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20'; badgeText = currentLang === 'sw' ? 'Tenda / Fursa' : 'Opportunity'; }
+
+                    let authorActions = '';
+                    if (currentUser && (currentUser.fullName === post.author || currentUser.role === 'staff')) {
+                        authorActions = `<button onclick="event.stopPropagation(); markAsSolved('${post._id || post.id}')" class="text-xs bg-[#FDFEFE] dark:bg-slate-900 hover:bg-emerald-600 hover:text-white text-emerald-600 border border-emerald-500/30 px-2.5 py-1 rounded-lg transition"><i class="fa-solid fa-check"></i> ${currentLang === 'sw' ? 'Imeisha' : 'Resolved'}</button>`;
+                    }
+
+                    const card = document.createElement('div');
+                    card.className = 'bg-[#FDFEFE] dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm flex flex-col justify-between hover:border-orange-500 dark:hover:border-orange-500 transition cursor-pointer';
+                    card.onclick = () => openDetailsModal(post, badgeText, badgeClass);
+
+                    card.innerHTML = `
+                        <div>
+                            ${post.imageUrl ? `<img src="http://localhost:5001${post.imageUrl}" class="w-full h-40 object-cover border-b border-slate-200/80 dark:border-slate-800">` : ''}
+                            <div class="p-4 space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">${badgeText}</span>
+                                    <span class="text-xs text-slate-400">${post.date}</span>
+                                </div>
+                                <h4 class="font-bold text-base text-slate-900 dark:text-white">${post.title}</h4>
+                                <p class="text-xs text-slate-600 dark:text-slate-400 line-clamp-2">${post.description}</p>
+                                ${authorActions ? `<div class="pt-2 flex justify-end">${authorActions}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="p-4 border-t border-slate-200/80 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-800/30 flex justify-between items-center text-xs">
+                            <span class="text-slate-500 dark:text-slate-400"><i class="fa-solid fa-location-dot mr-1 text-orange-500"></i> ${post.location}</span>
+                            <span class="text-orange-600 dark:text-orange-400 hover:underline font-semibold">${currentLang === 'sw' ? 'Soma Zaidi &rarr;' : 'Read More &rarr;'}</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                container.innerHTML = `<p class="text-slate-500 text-sm col-span-full text-center py-10">${currentLang === 'sw' ? 'Hakuna posti zilizowekwa kwa sasa.' : 'No posts available at the moment.'}</p>`;
+            }
+        }
+
+        function openDetailsModal(post, badgeText, badgeClass) {
+            const currentLang = localStorage.getItem('appLang') || 'sw';
+            
+            const badgeEl = document.getElementById('detailBadge');
+            badgeEl.className = `px-3 py-1 rounded-full text-xs font-semibold ${badgeClass}`;
+            badgeEl.innerText = badgeText;
+
+            document.getElementById('detailTitle').innerText = post.title;
+            document.getElementById('detailLocation').innerText = post.location;
+            document.getElementById('detailCategory').innerText = post.category || 'Jumla';
+            document.getElementById('detailAuthor').innerText = post.author || 'Mtumiaji';
+            document.getElementById('detailDate').innerText = post.date;
+            document.getElementById('detailDescription').innerText = post.description;
+
+            const imgContainer = document.getElementById('detailImageContainer');
+            const imgEl = document.getElementById('detailImage');
+            if(post.imageUrl) {
+                imgEl.src = `http://localhost:5001${post.imageUrl}`;
+                imgContainer.classList.remove('hidden');
+            } else {
+                imgContainer.classList.add('hidden');
+            }
+
+            const waBtn = document.getElementById('detailWhatsappBtn');
+            const cleanPhone = post.contact ? post.contact.replace(/^0/, '255') : '';
+            const msg = encodeURIComponent(`Habari, nimeona tangazo lako kupitia MUST Campus Hub kuhusu: ${post.title}`);
+            waBtn.href = `https://wa.me/${cleanPhone}?text=${msg}`;
+            
+            document.getElementById('whatsappBtnText').innerText = currentLang === 'sw' ? 'Wasiliana kupitia WhatsApp' : 'Contact via WhatsApp';
+
+            openModal('detailsModal');
+        }
+
+        async function markAsSolved(postId) {
+            const currentLang = localStorage.getItem('appLang') || 'sw';
+            const confirmMsg = currentLang === 'sw' ? 'Je, una uhakika kuwa tangazo hili limetimia / limepatikana na unataka liondoke kwenye mfumo?' : 'Are you sure you want to mark this post as resolved/removed?';
+            
+            if(confirm(confirmMsg)) {
+                try {
+                    const res = await fetch(`${API_URL}/${postId}/solve`, { method: 'PUT' });
+                    const data = await res.json();
+                    if(data.success || res.ok) {
+                        fetchPosts();
+                    } else {
+                        allPostsData = allPostsData.filter(p => (p._id !== postId && p.id !== postId));
+                        displayPosts(allPostsData);
+                    }
+                } catch (err) {
+                    allPostsData = allPostsData.filter(p => (p._id !== postId && p.id !== postId));
+                    displayPosts(allPostsData);
+                }
+            }
+        }
+
+        document.getElementById('userRegisterForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const fullName = document.getElementById('regFullName').value;
+            const regNumber = document.getElementById('regNumber').value;
+            const role = document.getElementById('regRole').value;
+            const password = document.getElementById('regPassword').value;
+            const errorEl = document.getElementById('regError');
+
+            try {
+                const res = await fetch('http://localhost:5001/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fullName, regNumber, role, password })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    alert(data.message);
+                    closeModal('registerModal');
+                    openModal('loginModal');
+                } else {
+                    errorEl.innerText = data.message;
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.innerText = 'Hitilafu ya mtandao.';
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('userLoginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const regNumber = document.getElementById('loginRegNumber').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+
+            try {
+                const res = await fetch('http://localhost:5001/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ regNumber, password })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    localStorage.setItem('currentUser', JSON.stringify(data.user));
+                    closeModal('loginModal');
+                    checkUserSession();
+                    fetchPosts();
+                } else {
+                    errorEl.innerText = data.message;
+                    errorEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                errorEl.innerText = 'Hitilafu ya mtandao.';
+                errorEl.classList.remove('hidden');
+            }
+        });
+
+        document.getElementById('createPostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+
+            const durationDays = parseInt(document.getElementById('postDuration').value);
+            const expireAt = new Date().getTime() + (durationDays * 24 * 60 * 60 * 1000);
+
+            const formData = new FormData();
+            formData.append('type', document.getElementById('postType').value);
+            formData.append('title', document.getElementById('postTitle').value);
+            formData.append('category', document.getElementById('postCategory').value);
+            formData.append('location', document.getElementById('postLocation').value);
+            formData.append('contact', document.getElementById('postContact').value);
+            formData.append('description', document.getElementById('postDesc').value);
+            formData.append('author', currentUser ? currentUser.fullName : 'Mtumiaji');
+            formData.append('expireAt', expireAt);
+            formData.append('isSolved', false);
+            
+            const imageFile = document.getElementById('postImage').files[0];
+            if(imageFile) formData.append('image', imageFile);
+
+            try {
+                const res = await fetch(API_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if(data.success) {
+                    closeModal('postModal');
+                    document.getElementById('createPostForm').reset();
+                    fetchPosts();
+                } else {
+                    alert('Imeshindikana kuchapisha.');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        });
+
+        function checkUserSession() {
+            const user = JSON.parse(localStorage.getItem('currentUser'));
+            if(user) {
+                document.getElementById('authButtons').classList.add('hidden');
+                document.getElementById('userProfileArea').classList.remove('hidden');
+                document.getElementById('userNameDisplay').innerText = `${user.fullName} (${user.role})`;
+            } else {
+                document.getElementById('authButtons').classList.remove('hidden');
+                document.getElementById('userProfileArea').classList.add('hidden');
+            }
+        }
+
+        function logoutUser() {
+            localStorage.removeItem('currentUser');
+            checkUserSession();
+            fetchPosts();
+        }
+
+        checkUserSession();
+        fetchPosts();
+    </script>
+</body>
+</html>

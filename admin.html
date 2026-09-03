@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MUST Campus Hub - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // ULINZI: Angalia kama ameingia kupitia login, kama hajatajwa rudisha login page
+        if (sessionStorage.getItem('isAdminAuthenticated') !== 'true') {
+            window.location.href = 'admin-login.html';
+        }
+    </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+    
+    <header class="bg-slate-900 border-b border-slate-800 p-4 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <span class="bg-amber-500 text-slate-950 font-bold px-3 py-1 rounded-lg text-sm">ADMIN</span>
+            <h1 class="text-xl font-bold">MUST Hub Dashboard</h1>
+        </div>
+        <div class="space-x-3">
+            <a href="index.html" class="text-sm bg-slate-800 hover:bg-slate-700 px-4 py-2 rounded-lg transition">Rudi Home</a>
+            <button onclick="logout()" class="text-sm bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white px-4 py-2 rounded-lg transition">Toka (Logout)</button>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto p-6 space-y-8">
+        <!-- STATS CARDS -->
+        <div class="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <p class="text-slate-400 text-sm">Jumla ya Posti</p>
+                <h3 id="statTotal" class="text-2xl font-bold mt-1">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <p class="text-slate-400 text-sm">Vilivyopotea</p>
+                <h3 id="statLost" class="text-2xl font-bold mt-1 text-red-400">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <p class="text-slate-400 text-sm">Vilivyookotwa</p>
+                <h3 id="statFound" class="text-2xl font-bold mt-1 text-green-400">0</h3>
+            </div>
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                <p class="text-slate-400 text-sm">Matangazo</p>
+                <h3 id="statAnnouncements" class="text-2xl font-bold mt-1 text-blue-400">0</h3>
+            </div>
+        </div>
+
+        <!-- POSTS MANAGEMENT TABLE -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-xl">
+            <div class="p-4 border-b border-slate-800">
+                <h2 class="text-lg font-semibold">Simamia Posti Zote za Campus</h2>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-800/50 text-slate-400 text-sm border-b border-slate-800">
+                            <th class="p-3">Kichwa cha Habari</th>
+                            <th class="p-3">Aina</th>
+                            <th class="p-3">Kategoria</th>
+                            <th class="p-3">Eneo</th>
+                            <th class="p-3">Tarehe</th>
+                            <th class="p-3 text-center">Vitendo</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminPostsTable" class="divide-y divide-slate-800 text-sm">
+                        <!-- Data -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_URL = 'http://localhost:5001/api/posts';
+        const STATS_URL = 'http://localhost:5001/api/admin/stats';
+
+        async function fetchAdminData() {
+            try {
+                const statsRes = await fetch(STATS_URL);
+                const statsData = await statsRes.json();
+                if(statsData.success) {
+                    document.getElementById('statTotal').innerText = statsData.stats.total;
+                    document.getElementById('statLost').innerText = statsData.stats.lost;
+                    document.getElementById('statFound').innerText = statsData.stats.found;
+                    document.getElementById('statAnnouncements').innerText = statsData.stats.announcements;
+                }
+
+                const postsRes = await fetch(API_URL);
+                const postsData = await postsRes.json();
+                const tableBody = document.getElementById('adminPostsTable');
+                tableBody.innerHTML = '';
+
+                if(postsData.success && postsData.data.length > 0) {
+                    postsData.data.forEach(post => {
+                        let typeBadge = '';
+                        if(post.type === 'lost') typeBadge = '<span class="px-2 py-1 bg-red-500/20 text-red-400 rounded text-xs">Imepotea</span>';
+                        else if(post.type === 'found') typeBadge = '<span class="px-2 py-1 bg-green-500/20 text-green-400 rounded text-xs">Imeookotwa</span>';
+                        else typeBadge = '<span class="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs">Tangazo</span>';
+
+                        const row = document.createElement('tr');
+                        row.className = 'hover:bg-slate-800/30 transition';
+                        row.innerHTML = `
+                            <td class="p-3 font-medium">${post.title}</td>
+                            <td class="p-3">${typeBadge}</td>
+                            <td class="p-3 text-slate-400">${post.category}</td>
+                            <td class="p-3 text-slate-400">${post.location}</td>
+                            <td class="p-3 text-slate-400">${post.date}</td>
+                            <td class="p-3 text-center">
+                                <button onclick="deletePost(${post.id})" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-xs transition">
+                                    Futa
+                                </button>
+                            </td>
+                        `;
+                        tableBody.appendChild(row);
+                    });
+                } else {
+                    tableBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-500">Hakuna posti zilizopatikana.</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Hitilafu:", error);
+            }
+        }
+
+        async function deletePost(id) {
+            if(confirm('Je, una uhakika unataka kufuta posti hii?')) {
+                try {
+                    const res = await fetch(`${API_URL}/${id}`, { method: 'DELETE' });
+                    const data = await res.json();
+                    if(data.success) {
+                        fetchAdminData();
+                    } else {
+                        alert('Imeshindikana kufuta.');
+                    }
+                } catch (error) {
+                    console.error("Hitilafu:", error);
+                }
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isAdminAuthenticated');
+            window.location.href = 'admin-login.html';
+        }
+
+        fetchAdminData();
+    </script>
+</body>
+</html>
