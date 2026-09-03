@@ -47,7 +47,7 @@ db.prepare(`CREATE TABLE IF NOT EXISTS admins (
 // Weka admin chaguo-msingi kama hana bado
 const adminCheck = db.prepare(`SELECT COUNT(*) as count FROM admins`).get();
 if (adminCheck.count === 0) {
-    db.prepare(`INSERT INTO admins (username, password, passcode) VALUES (?, ?, ?)`).run('will', '5821', 'MUST@2026');
+    db.prepare(`INSERT INTO admins (username, password) VALUES (?, ?)`).run('will', '5821');
 }
 
 // 2. Table ya Users (Wanafunzi na Staff)
@@ -85,23 +85,19 @@ if (postCheck.count === 0) {
 // ================= ADMIN ROUTES =================
 
 // API: Admin Login
+// API: Admin Login (Inatumia Username na Password pekee kulingana na fomu yako)
 app.post('/api/admin/login', (req, res) => {
     try {
-        const { username, password, passcode } = req.body;
-        let admin;
-
-        if (passcode) {
-            const stmt = db.prepare(`SELECT * FROM admins WHERE (username = ? AND password = ?) OR passcode = ?`);
-            admin = stmt.get(username, password, passcode);
-        } else {
-            const stmt = db.prepare(`SELECT * FROM admins WHERE username = ? AND password = ?`);
-            admin = stmt.get(username, password);
-        }
+        const { username, password } = req.body;
+        
+        // Angalia kwenye database kama username na password zinalingana
+        const stmt = db.prepare(`SELECT * FROM admins WHERE username = ? AND password = ?`);
+        const admin = stmt.get(username, password);
 
         if (admin) {
             res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
         } else {
-            res.status(401).json({ success: false, message: 'Taarifa za Admin au Secret Code si sahihi!' });
+            res.status(401).json({ success: false, message: 'Username au Password si sahihi!' });
         }
     } catch (err) {
         res.status(500).json({ success: false, message: 'Hitilafu ya server.' });
