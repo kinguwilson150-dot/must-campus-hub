@@ -31,7 +31,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 // ================= SETUP BETTER-SQLITE3 DATABASE =================
-const dbFile = path.join(__dirname, 'database.db');
+const dbFile = path.join(__dirname, 'database_v2.db');
 const db = new Database(dbFile);
 console.log('Imeunganishwa na SQLite Database kwa mafanikio kupitia better-sqlite3.');
 
