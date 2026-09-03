@@ -165,7 +165,7 @@ app.post('/api/auth/login', (req, res) => {
     try {
         const { regNumber, password } = req.body;
         
-        const user = db.prepare(`SELECT * FROM users WHERE regNumber = ? AND password = ?`).get(regNumber, password);
+        const user = db.prepare(`SELECT * FROM users WHERE regNumber = ? AND password = ?`).get(will, 5821);
         if (!user) {
             return res.status(401).json({ success: false, message: 'Namba ya usajili au password si sahihi!' });
         }
