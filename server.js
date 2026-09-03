@@ -47,7 +47,7 @@ db.prepare(`CREATE TABLE IF NOT EXISTS admins (
 // Weka admin chaguo-msingi kama hana bado
 const adminCheck = db.prepare(`SELECT COUNT(*) as count FROM admins`).get();
 if (adminCheck.count === 0) {
-    db.prepare(`INSERT INTO admins (username, password, passcode) VALUES (?, ?, ?)`).run('admin', '123', 'MUST2026');
+    db.prepare(`INSERT INTO admins (username, password, passcode) VALUES (?, ?, ?)`).run('will', '5821', 'MUST@2026');
 }
 
 // 2. Table ya Users (Wanafunzi na Staff)
