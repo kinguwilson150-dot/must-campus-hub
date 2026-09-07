@@ -95,17 +95,22 @@ if (postCheck.count === 0) {
 // API ya Admin Login
 app.post('/api/auth/login', (req, res) => {
     try {
-        console.log('Login Body:', req.body);
-        const { regNumber, username, password } = req.body;
-        const identifier = (regNumber || username || '').trim();
-        const pass = (password || '').trim();
+        // Tunapokea majina yote yanayoweza kutumwa na fomu tofauti tofauti
+        const { regNumber, username, email, password, pass } = req.body;
+        const identifier = (regNumber || username || email || '').trim();
+        const passwordInput = (password || pass || '').trim();
 
-        if (!identifier || !pass) {
-            return res.status(400).json({ success: false, message: 'Tafadhali jaza namba ya usajili na nenosiri.' });
+        if (!identifier || !passwordInput) {
+            return res.status(400).json({ success: false, message: 'Tafadhali jaza taarifa zote.' });
         }
 
-        const stmt = db.prepare(`SELECT * FROM users WHERE (regNumber = ? OR username = ?) AND password = ?`);
-        const user = stmt.get(identifier, identifier, pass);
+        // Tunatafuta mtumiaji kwa column yoyote inayofanana
+        const stmt = db.prepare(`
+            SELECT * FROM users 
+            WHERE (LOWER(regNumber) = LOWER(?) OR LOWER(username) = LOWER(?) OR LOWER(fullName) = LOWER(?)) 
+            AND password = ?
+        `);
+        const user = stmt.get(identifier, identifier, identifier, passwordInput);
 
         if (user) {
             res.json({ success: true, message: 'Umeingia kwa mafanikio!', user });
@@ -113,7 +118,7 @@ app.post('/api/auth/login', (req, res) => {
             res.status(401).json({ success: false, message: 'Namba ya usajili au nenosiri si sahihi.' });
         }
     } catch (err) {
-        console.error('Login Server Error:', err);
+        console.error('Login Error:', err.message);
         res.status(500).json({ success: false, message: 'Hitilafu ya server.' });
     }
 });
