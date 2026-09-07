@@ -37,12 +37,16 @@ console.log('Imeunganishwa na SQLite Database kwa mafanikio kupitia better-sqlit
 
 // Unda Tables kama hazipo na weka Admin wa kwanza
 // 1. Table ya Admins
-db.prepare(`CREATE TABLE IF NOT EXISTS admins (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    password TEXT,
-    passcode TEXT
-)`).run();
+// Hakikisha jedwali la users lipo kila server inapowaka
+db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        fullName TEXT,
+        regNumber TEXT UNIQUE,
+        role TEXT,
+        password TEXT
+    )
+`);
 
 // Weka admin chaguo-msingi kama hana bado
 const adminCheck = db.prepare(`SELECT COUNT(*) as count FROM admins`).get();
@@ -91,9 +95,14 @@ if (postCheck.count === 0) {
 // API ya Admin Login
 app.post('/api/auth/login', (req, res) => {
     try {
+        console.log('Login Body:', req.body);
         const { regNumber, username, password } = req.body;
         const identifier = (regNumber || username || '').trim();
         const pass = (password || '').trim();
+
+        if (!identifier || !pass) {
+            return res.status(400).json({ success: false, message: 'Tafadhali jaza namba ya usajili na nenosiri.' });
+        }
 
         const stmt = db.prepare(`SELECT * FROM users WHERE (regNumber = ? OR username = ?) AND password = ?`);
         const user = stmt.get(identifier, identifier, pass);
@@ -104,7 +113,7 @@ app.post('/api/auth/login', (req, res) => {
             res.status(401).json({ success: false, message: 'Namba ya usajili au nenosiri si sahihi.' });
         }
     } catch (err) {
-        console.error('Login Error:', err);
+        console.error('Login Server Error:', err);
         res.status(500).json({ success: false, message: 'Hitilafu ya server.' });
     }
 });
