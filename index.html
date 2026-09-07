@@ -275,7 +275,7 @@
     </footer>
 
     <script>
-        const API_URL = 'http://localhost:5001/api/posts';
+        const API_URL = '/api/posts';
         let allPostsData = [];
 
         const translations = {
@@ -449,7 +449,7 @@
 
                     card.innerHTML = `
                         <div>
-                            ${post.imageUrl ? `<img src="http://localhost:5001${post.imageUrl}" class="w-full h-40 object-cover border-b border-slate-200/80 dark:border-slate-800">` : ''}
+                            ${post.imageUrl ? `<img src="${post.imageUrl}" class="w-full h-40 object-cover border-b border-slate-200/80 dark:border-slate-800">` : ''}
                             <div class="p-4 space-y-2">
                                 <div class="flex justify-between items-center">
                                     <span class="px-2.5 py-1 rounded-full text-xs font-semibold ${badgeClass}">${badgeText}</span>
@@ -489,7 +489,7 @@
             const imgContainer = document.getElementById('detailImageContainer');
             const imgEl = document.getElementById('detailImage');
             if(post.imageUrl) {
-                imgEl.src = `http://localhost:5001${post.imageUrl}`;
+                imgEl.src = post.imageUrl;
                 imgContainer.classList.remove('hidden');
             } else {
                 imgContainer.classList.add('hidden');

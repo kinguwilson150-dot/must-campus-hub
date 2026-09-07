@@ -12,17 +12,18 @@ const PORT = process.env.PORT || 5001;
 app.use(cors());
 app.use(express.json());
 app.use(express.static(__dirname));
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Hakikisha folda ya uploads ipo
-if (!fs.existsSync('./uploads')) {
-    fs.mkdirSync('./uploads');
+const uploadsDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
 // Sanidi Multer kwa ajili ya kupokea picha
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, uploadsDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
@@ -35,10 +36,20 @@ const dbFile = path.join(__dirname, 'database_v2.db');
 const db = new Database(dbFile);
 console.log('Imeunganishwa na SQLite Database kwa mafanikio kupitia better-sqlite3.');
 
-// Unda Tables kama hazipo na weka Admin wa kwanza
+app.get('/health', (req, res) => {
+    res.json({ success: true, status: 'ok' });
+});
+
+// Unda tables kama hazipo na weka admin wa kwanza
 // 1. Table ya Admins
-// Hakikisha jedwali la users lipo kila server inapowaka
 db.exec(`
+    CREATE TABLE IF NOT EXISTS admins (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        username TEXT UNIQUE,
+        password TEXT,
+        passcode TEXT
+    );
+
     CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         fullName TEXT,
@@ -51,7 +62,7 @@ db.exec(`
 // Weka admin chaguo-msingi kama hana bado
 const adminCheck = db.prepare(`SELECT COUNT(*) as count FROM admins`).get();
 if (adminCheck.count === 0) {
-    db.prepare(`INSERT INTO admins (username, password) VALUES (?, ?)`).run('will', '5821');
+    db.prepare(`INSERT INTO admins (username, password, passcode) VALUES (?, ?, ?)`).run('will', '5821', '5821');
 }
 
 // 2. Table ya Users (Wanafunzi na Staff)
@@ -104,13 +115,13 @@ app.post('/api/auth/login', (req, res) => {
             return res.status(400).json({ success: false, message: 'Tafadhali jaza taarifa zote.' });
         }
 
-        // Tunatafuta mtumiaji kwa column yoyote inayofanana
+        // Users table ina regNumber na fullName; username si column ya users.
         const stmt = db.prepare(`
             SELECT * FROM users 
-            WHERE (LOWER(regNumber) = LOWER(?) OR LOWER(username) = LOWER(?) OR LOWER(fullName) = LOWER(?)) 
+            WHERE (LOWER(regNumber) = LOWER(?) OR LOWER(fullName) = LOWER(?))
             AND password = ?
         `);
-        const user = stmt.get(identifier, identifier, identifier, passwordInput);
+        const user = stmt.get(identifier, identifier, passwordInput);
 
         if (user) {
             res.json({ success: true, message: 'Umeingia kwa mafanikio!', user });
@@ -188,11 +199,6 @@ app.post('/api/admin/login', (req, res) => {
         const stmt = db.prepare(`SELECT * FROM admins WHERE LOWER(username) = ? AND (password = ? OR passcode = ?)`);
         let admin = stmt.get(inputUser, inputPass, inputPass);
 
-        // Kama bado haijapatikana, ijenge na kuiruhusu moja kwa moja kwa ajili ya majaribio
-        if (!admin && inputUser === 'will') {
-            admin = { username: 'will' };
-        }
-
         if (admin) {
             res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
         } else {
@@ -254,6 +260,25 @@ app.post('/api/posts', upload.single('image'), (req, res) => {
         res.json({ success: true, message: 'Posti yako imewekwa hewani kwa mafanikio!', data: newPost });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Hitilafu kwenye server.' });
+    }
+});
+
+// API: Ondoa posti iliyotatuliwa
+app.put('/api/posts/:id/solve', (req, res) => {
+    try {
+        const postId = Number(req.params.id);
+        if (!Number.isInteger(postId)) {
+            return res.status(400).json({ success: false, message: 'ID ya posti si sahihi.' });
+        }
+
+        const result = db.prepare(`DELETE FROM posts WHERE id = ?`).run(postId);
+        if (result.changes === 0) {
+            return res.status(404).json({ success: false, message: 'Posti haijapatikana.' });
+        }
+
+        res.json({ success: true, message: 'Posti imetatuliwa.' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Imeshindwa kusolve posti.' });
     }
 });
 
