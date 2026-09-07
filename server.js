@@ -89,31 +89,25 @@ if (postCheck.count === 0) {
 // API: Admin Login Inayopokea Password au Passcode kwa urahisi
 // API: Admin Login (Inatumia Username na Password pekee kulingana na fomu yako)
 // API ya Admin Login
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/auth/login', (req, res) => {
     try {
-        const { username, password, passcode } = req.body;
-        const inputUser = (username || '').trim().toLowerCase();
-        const inputPass = (password || passcode || '').trim();
+        const { regNumber, username, password } = req.body;
+        const identifier = (regNumber || username || '').trim();
+        const pass = (password || '').trim();
 
-        // Ruhusu moja kwa moja kwa will na 5821
-        if (inputUser === 'will' && inputPass === '5821') {
-            return res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
-        }
+        const stmt = db.prepare(`SELECT * FROM users WHERE (regNumber = ? OR username = ?) AND password = ?`);
+        const user = stmt.get(identifier, identifier, pass);
 
-        // Kama la, ikague kwenye database
-        const stmt = db.prepare(`SELECT * FROM admins WHERE LOWER(username) = ? AND (password = ? OR passcode = ?)`);
-        const admin = stmt.get(inputUser, inputPass, inputPass);
-
-        if (admin) {
-            res.json({ success: true, message: 'Imefanikiwa kuingia kama Admin!' });
+        if (user) {
+            res.json({ success: true, message: 'Umeingia kwa mafanikio!', user });
         } else {
-            res.status(401).json({ success: false, message: 'Taarifa za Admin au Secret Code si sahihi!' });
+            res.status(401).json({ success: false, message: 'Namba ya usajili au nenosiri si sahihi.' });
         }
     } catch (err) {
+        console.error('Login Error:', err);
         res.status(500).json({ success: false, message: 'Hitilafu ya server.' });
     }
 });
-
 // API: Admin Stats (Takwimu za Posti kutoka Database)
 app.get('/api/admin/stats', (req, res) => {
     try {
