@@ -213,7 +213,7 @@
         submitBtn.innerText = t.submitting;
 
         try {
-            const response = await fetch('http://localhost:5001/api/posts', {
+           const response = await fetch('/api/posts', {
                 method: 'POST',
                 body: formData
             });
